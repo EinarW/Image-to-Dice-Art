@@ -1,5 +1,6 @@
 import image_slicer
 import os
+import sys
 from os.path import isfile, join
 from PIL import Image, ImageStat, ImageDraw
 from numpy import average, math
@@ -8,6 +9,12 @@ from numpy import average, math
 RANGES = [42.5, 85.0, 127.5, 170.0, 212.5]
 #Max allowed tiles, limited by image_slicer
 MAXTILES = 9140
+
+#Set dice colors default is white
+if len(sys.argv) > 1:
+    DICECOLOR = str(sys.argv[1])
+else:
+    DICECOLOR = "white"
 
 #Get running directory
 path = os.getcwd()
@@ -126,7 +133,7 @@ for fileName in images:
     i = 1
     diceImages = []
     while i <= 6:
-        diceImage = Image.open(path + "\\dices\dice-{}.png".format(i))
+        diceImage = Image.open(path + "\\dices\{}\dice-{}.png".format(DICECOLOR ,i))
         resizedDice = diceImage.resize((width, height))
         diceImages.append(resizedDice)
         i += 1
