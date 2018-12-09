@@ -7,14 +7,23 @@ from numpy import average, math
 
 #The RBG to cice number range
 RANGES = [42.5, 85.0, 127.5, 170.0, 212.5]
+#RANGES = [80, 100, 150, 200, 250]
 #Max allowed tiles, limited by image_slicer
 MAXTILES = 9140
 
 #Set dice colors default is white
 if len(sys.argv) > 1:
-    DICECOLOR = str(sys.argv[1])
+    arg = str(sys.argv[1])
+    if arg == "ivory":
+        DICECOLOR = arg
+    elif arg == "black":
+        DICECOLOR = arg
+    else:
+        DICECOLOR = "white"
 else:
     DICECOLOR = "white"
+
+
 
 #Get running directory
 path = os.getcwd()
@@ -35,8 +44,9 @@ for file in files:
 
 ##Make image grayscale, split the image into parts, get median rgb value of all parts
 for fileName in images:
-    print(fileName + ":")
-    textFile.write(fileName + ":\n")
+    # Create text file for saving line dice guide
+    fileNameNoType = fileName.replace(".png", "")
+    lineGuide = open("guide-{}.txt".format(fileNameNoType), "w")
 
     # Open and convert to grayscale
     image = Image.open(fileName).convert('LA')
@@ -103,17 +113,31 @@ for fileName in images:
 
         rgbAverage = average(medianList)
 
-        dice = 1
-        if (rgbAverage <= RANGES[0]):
+
+        if DICECOLOR == "black":
             dice = 6
-        elif (rgbAverage > RANGES[0] and rgbAverage <= RANGES[1]):
-            dice = 5
-        elif (rgbAverage > RANGES[1] and rgbAverage <= RANGES[2]):
-            dice = 4
-        elif (rgbAverage > RANGES[2] and rgbAverage <= RANGES[3]):
-            dice = 3
-        elif (rgbAverage > RANGES[3] and rgbAverage <= RANGES[4]):
-            dice = 2
+            if (rgbAverage <= RANGES[0]):
+                dice = 1
+            elif (rgbAverage > RANGES[0] and rgbAverage <= RANGES[1]):
+                dice = 2
+            elif (rgbAverage > RANGES[1] and rgbAverage <= RANGES[2]):
+                dice = 3
+            elif (rgbAverage > RANGES[2] and rgbAverage <= RANGES[3]):
+                dice = 4
+            elif (rgbAverage > RANGES[3] and rgbAverage <= RANGES[4]):
+                dice = 5
+        else:
+            dice = 1
+            if (rgbAverage <= RANGES[0]):
+                dice = 6
+            elif (rgbAverage > RANGES[0] and rgbAverage <= RANGES[1]):
+                dice = 5
+            elif (rgbAverage > RANGES[1] and rgbAverage <= RANGES[2]):
+                dice = 4
+            elif (rgbAverage > RANGES[2] and rgbAverage <= RANGES[3]):
+                dice = 3
+            elif (rgbAverage > RANGES[3] and rgbAverage <= RANGES[4]):
+                dice = 2
 
         diceList.append(dice)
 
@@ -141,13 +165,26 @@ for fileName in images:
 
     # Find median RGB of tiles and assign a dice image to the tile based on RGB value
     diceIndex = 0
+    lineIndex = 0
+    lineCount = 1
+    lineGuide.write("Line: {}\n".format(lineCount))
     for tile in tiles:
         dice = diceList[diceIndex] - 1
         resizedDice = diceImages[dice]
 
         tile.image = resizedDice
 
+        lineGuide.write("{}  ".format(diceList[diceIndex]))
+
         diceIndex += 1
+        lineIndex += 1
+
+        if lineIndex >= dim:
+            lineIndex = 0
+            lineCount += 1
+
+            if lineCount <= dim:
+                lineGuide.write("\n\nLine: {}\n".format(lineCount))
 
     # Save new image
     newImage = image_slicer.join(tiles)
@@ -159,5 +196,6 @@ for fileName in images:
 
     print("\n")
     textFile.write("\n")
+    lineGuide.close
 
 textFile.close()
